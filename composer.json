@@ -4,8 +4,8 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Iztok Svetik",
-            "email": "iztok@isd.si"
+            "name": "Golubev Dmitrii",
+            "email": "shotonoff@gmail.com"
         }
     ],
     "autoload" : {
@@ -17,7 +17,7 @@
     "require" : {
         "php" : ">=5.3",
         "ext-amqp" : "*",
-        "m6web/amqp-bundle": "1.6.*",
+        "m6web/amqp-bundle": "1.10.*",
         "silex/silex": "~1.2"
     },
     "require-dev": {

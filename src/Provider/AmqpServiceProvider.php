@@ -31,11 +31,13 @@ class AmqpServiceProvider implements ServiceProviderInterface
     /**
      * {@inheritdoc}
      */
-    public function boot(Application $app) {}
+    public function boot(Application $app)
+    {
+    }
 
     /**
      * @param Application $app
-     * @param array       $options
+     * @param array $options
      *
      * @return \AMQPConnection
      */
@@ -83,28 +85,30 @@ class AmqpServiceProvider implements ServiceProviderInterface
      */
     private function loadProducers(Application $app)
     {
-        $app['amqp.producer'] = $app->share(function($app) {
-            $producerFactory = new ProducerFactory('AMQPChannel', 'AMQPExchange', 'AMQPQueue');
+        $app['amqp.producer'] = $app->share(function ($app) {
+            $producerFactory = new ProducerFactory(\AMQPChannel::class, \AMQPExchange::class, \AMQPQueue::class);
 
             $producers = [];
-            foreach($app['amqp.producers'] as $name => $options) {
+            foreach ($app['amqp.producers'] as $name => $options) {
                 $connection = $this->getConnection($app, $options);
                 $lazy = $this->isLazy($app, $options['connection']);
 
                 $exchangeOptions = $this->addDefaultOptions($options, 'exchange_options', [
-                    'passive'            => false,
-                    'durable'            => true,
-                    'auto_delete'        => false,
-                    'arguments'          => [],
-                    'routing_keys'       => [],
+                    'passive' => false,
+                    'durable' => true,
+                    'auto_delete' => false,
+                    'arguments' => [],
+                    'routing_keys' => [],
                     'publish_attributes' => [],
                 ], false);
 
                 $queueOptions = $this->addDefaultOptions($options, 'queue_options', [
-                    'name'        => '',
-                    'passive'     => false,
-                    'durable'     => true,
+                    'name' => '',
+                    'passive' => false,
+                    'durable' => true,
                     'auto_delete' => false,
+                    'arguments' => [],
+                    'routing_keys' => []
                 ]);
 
                 $producerClass = isset($options['class']) ? $options['class'] : self::$defaultProducer;
@@ -121,31 +125,40 @@ class AmqpServiceProvider implements ServiceProviderInterface
      */
     private function loadConsumers(Application $app)
     {
-        $app['amqp.consumer'] = $app->share(function($app) {
-            $consumerFactory = new ConsumerFactory('AMQPChannel', 'AMQPQueue');
+        $app['amqp.consumer'] = $app->share(function ($app) {
+            $consumerFactory = new ConsumerFactory(\AMQPChannel::class, \AMQPQueue::class, \AMQPExchange::class);
 
             $consumers = [];
-            foreach($app['amqp.consumers'] as $name => $options) {
+            foreach ($app['amqp.consumers'] as $name => $options) {
                 $connection = $this->getConnection($app, $options);
 
                 $queueOptions = $this->addDefaultOptions($options, 'queue_options', [
-                    'passive'      => false,
-                    'durable'      => true,
-                    'exclusive'    => false,
-                    'auto_delete'  => false,
-                    'arguments'    => [],
+                    'passive' => false,
+                    'durable' => true,
+                    'exclusive' => false,
+                    'auto_delete' => false,
+                    'arguments' => [],
                     'routing_keys' => [],
                 ], false);
 
                 $qosOptions = $this->addDefaultOptions($options, 'qus_options', [
-                    'prefetch_size'  => 0,
+                    'prefetch_size' => 0,
                     'prefetch_count' => 0,
                 ]);
+
+                $exchangeOptions = $this->addDefaultOptions($options, 'exchange_options', [
+                    'passive' => false,
+                    'durable' => true,
+                    'auto_delete' => false,
+                    'arguments' => [],
+                    'routing_keys' => [],
+                    'publish_attributes' => [],
+                ], false);
 
                 $consumerClass = isset($options['class']) ? $options['class'] : self::$defaultConsumer;
 
                 $consumers[$name] = $consumerFactory->get(
-                    $consumerClass, $connection, $options['exchange_options'], $queueOptions, $qosOptions
+                    $consumerClass, $connection, $exchangeOptions, $queueOptions, true, $qosOptions
                 );
             }
 
@@ -155,7 +168,7 @@ class AmqpServiceProvider implements ServiceProviderInterface
 
     /**
      * @param Application $app
-     * @param string      $connection
+     * @param string $connection
      * @return bool
      */
     private function isLazy(Application $app, $connection)
@@ -168,9 +181,9 @@ class AmqpServiceProvider implements ServiceProviderInterface
     }
 
     /**
-     * @param array     $options
-     * @param string    $option
-     * @param array     $default
+     * @param array $options
+     * @param string $option
+     * @param array $default
      * @param bool|true $optional
      * @return array
      */
