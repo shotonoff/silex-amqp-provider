@@ -1,5 +1,5 @@
 {
-    "name" : "iztoksvetik/silex-amqp-provider",
+    "name" : "shotonoff/silex-amqp-provider",
     "description" : "Silex AMQP provider",
     "license": "MIT",
     "authors": [
